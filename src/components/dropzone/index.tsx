@@ -58,7 +58,6 @@ export const Dropzone = ({ onAcceptedFiles }: DropzoneProps) => {
   );
 
   useEffect(() => {
-    console.log(acceptedFiles);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     onAcceptedFiles(acceptedFiles);
   }, [acceptedFiles]);
