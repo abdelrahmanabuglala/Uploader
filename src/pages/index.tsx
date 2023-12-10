@@ -2,6 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { Terminal } from "lucide-react";
+import Head from "next/head";
+import { Alert, AlertDescription, AlertTitle } from "~/@/components/ui/alert";
+import { Separator } from "~/@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -12,17 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "~/@/components/ui/table";
-
-import { Alert, AlertDescription, AlertTitle } from "~/@/components/ui/alert";
-
-import Head from "next/head";
-import { Separator } from "~/@/components/ui/separator";
-import { Terminal } from "lucide-react";
-import { toast } from "sonner";
-import { Dropzone } from "~/components/dropzone";
-import React, { useEffect, useState } from "react";
-import { api } from "~/utils/api";
+// import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
+import { Dropzone } from "~/components/dropzone";
+import { api } from "~/utils/api";
 
 export default function Home() {
   const queryClient = useQueryClient();
@@ -98,12 +96,7 @@ export default function Home() {
           {uploadingFiles.map((f) => (
             <React.Fragment key={f.size}>
               <Separator orientation="horizontal" />
-              <Alert
-                className="bg-slate-300"
-                onClick={() => {
-                  toast.info("Hello world");
-                }}
-              >
+              <Alert className="bg-slate-300">
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Heads up!</AlertTitle>
                 <AlertDescription>
