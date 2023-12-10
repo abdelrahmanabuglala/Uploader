@@ -15,48 +15,20 @@ import Head from "next/head";
 import { Separator } from "~/@/components/ui/separator";
 import { Terminal } from "lucide-react";
 import { toast } from "sonner";
+import { Dropzone } from "~/components/dropzone";
+import { useState } from "react";
 // import { api } from "~/utils/api";
 
 export default function Home() {
   // const hello = api.post.hello.useQuery({ text: "from tRPC" });
 
-  const files = [
+  const [files, setFiles] = useState<
     {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-    {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-    {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-    {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-    {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-    {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-    {
-      name: "play.png",
-      size: "1.5MB",
-      date: new Date().toLocaleDateString(),
-    },
-  ];
+      name: string;
+      size: string;
+      date: string;
+    }[]
+  >([]);
 
   return (
     <>
@@ -68,6 +40,18 @@ export default function Home() {
 
       <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-300 to-slate-400">
         <div className="container flex max-w-6xl flex-col items-center justify-center gap-12 px-4 py-16 ">
+          <Dropzone
+            onAcceptedFiles={(files) => {
+              const newFiles = files.map((file) => ({
+                name: file.name,
+                size: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+                date: new Date().toLocaleDateString(),
+              }));
+
+              setFiles((prev) => [...prev, ...newFiles]);
+            }}
+          />
+
           <Table>
             <TableCaption className="pb-4">
               A list of your recent uploads.

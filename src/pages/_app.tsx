@@ -9,7 +9,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       <Toaster richColors />
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </>
   );
 };

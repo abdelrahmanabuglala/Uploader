@@ -49,3 +49,33 @@
     --ring: 224.3 76.3% 48%;
   }
 }
+
+
+.dropzone-container {
+  text-align: center;
+  background-color: #efebeb;
+  height: 100%;
+  width: 100%;
+}
+
+.dropzone-area {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.upload-container {
+  height: 100vh;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+ul {
+  list-style-type: none;
+}
+
+p {
+  margin-top: 0;
+}
