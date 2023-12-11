@@ -3,6 +3,14 @@ import fs from "fs";
 import path from "path";
 import { db } from "~/server/db";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "20mb", // Set desired value here
+    },
+  },
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -41,6 +49,9 @@ export default async function handler(
 
       res.status(200).json({ message: "File uploaded successfully" });
     } catch (error) {
+      if (error instanceof Error) {
+        console.log("#### Error while uploading... ", error.message);
+      }
       res.status(500).json({ message: "ERROR: File not uploaded" });
     }
   } else {

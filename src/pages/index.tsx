@@ -4,6 +4,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Info } from "lucide-react";
 import Head from "next/head";
+import React, { useState } from "react";
+import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "~/@/components/ui/alert";
 import { Separator } from "~/@/components/ui/separator";
 import {
@@ -16,15 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from "~/@/components/ui/table";
-import { toast } from "sonner";
-import React, { useState } from "react";
 import { Dropzone } from "~/components/dropzone";
 import { api } from "~/utils/api";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
   const filesQuery = api.files.getAllFiles.useQuery();
-  const queryClient = useQueryClient();
 
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, File>>(
     {},
@@ -46,8 +44,8 @@ export default function Home() {
 
   const uploadFile = async (file: File) => {
     try {
-      // Simulate random wait time between 1 and 10 seconds
-      const delay = Math.random() * (10000 - 1000) + 1000;
+      // Simulate random wait time between 1 and 6 seconds
+      const delay = Math.random() * (5000 - 1000) + 1000;
       await new Promise((resolve) => setTimeout(resolve, delay));
 
       const base64 = await fileToBase64(file);
@@ -61,21 +59,26 @@ export default function Home() {
           size: file.size,
         }),
       });
+
       if (!response.ok) {
-        throw new Error("File upload failed");
+        throw new Error("Failed to upload file");
       }
 
       toast.success(`Uploaded ${file.name} successfully!`);
     } catch (error) {
+      if (error instanceof Error) {
+        console.error(
+          `Failed to upload ${file.name} with error: ${error.message}}`,
+        );
+      }
       toast.error(`Failed to upload ${file.name}`);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { [file.size]: _, ...rest } = uploadingFiles;
-    setUploadingFiles(rest);
-
     void filesQuery.refetch();
-    void queryClient.invalidateQueries(["files.getAllFiles"]);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { [file.size + file.name]: _, ...rest } = uploadingFiles;
+    setUploadingFiles(rest);
   };
 
   const acceptedFilesHandler = async (files: Record<string, File>) => {
@@ -91,11 +94,9 @@ export default function Home() {
     });
 
     await Promise.all(promises).finally(() => {
-      void filesQuery.refetch();
-      void queryClient.invalidateQueries(["files.getAllFiles"]);
-
-      setUploadingFiles({});
       toast.info("Finish processing files!");
+
+      void filesQuery.refetch();
     });
   };
 

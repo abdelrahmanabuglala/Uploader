@@ -61,7 +61,7 @@ export const Dropzone = ({ onAcceptedFiles }: DropzoneProps) => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const fileMp: Record<string, File> = Object.assign(
       {},
-      ...acceptedFiles.map((file) => ({ [file.size]: file })),
+      ...acceptedFiles.map((file) => ({ [file.size + file.name]: file })),
     );
 
     onAcceptedFiles(fileMp);
