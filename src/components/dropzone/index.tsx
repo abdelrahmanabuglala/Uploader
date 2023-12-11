@@ -31,7 +31,7 @@ const rejectStyle = {
 };
 
 interface DropzoneProps {
-  onAcceptedFiles: (files: File[]) => void;
+  onAcceptedFiles: (files: Record<string, File>) => void;
 }
 
 export const Dropzone = ({ onAcceptedFiles }: DropzoneProps) => {
@@ -58,8 +58,13 @@ export const Dropzone = ({ onAcceptedFiles }: DropzoneProps) => {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    onAcceptedFiles(acceptedFiles);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const fileMp: Record<string, File> = Object.assign(
+      {},
+      ...acceptedFiles.map((file) => ({ [file.size]: file })),
+    );
+
+    onAcceptedFiles(fileMp);
   }, [acceptedFiles]);
 
   return (

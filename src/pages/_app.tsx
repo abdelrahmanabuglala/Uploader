@@ -8,7 +8,7 @@ import "~/styles/globals.css";
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
-      <Toaster richColors />
+      <Toaster richColors visibleToasts={10} />
       <Component {...pageProps} />
     </>
   );

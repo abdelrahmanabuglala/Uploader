@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Terminal } from "lucide-react";
+import { Info } from "lucide-react";
 import Head from "next/head";
 import { Alert, AlertDescription, AlertTitle } from "~/@/components/ui/alert";
 import { Separator } from "~/@/components/ui/separator";
@@ -16,17 +16,19 @@ import {
   TableHeader,
   TableRow,
 } from "~/@/components/ui/table";
-// import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+import React, { useState } from "react";
 import { Dropzone } from "~/components/dropzone";
 import { api } from "~/utils/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Home() {
+  const filesQuery = api.files.getAllFiles.useQuery();
   const queryClient = useQueryClient();
-  const files = api.files.getAllFiles.useQuery();
 
-  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, File>>(
+    {},
+  );
 
   const getSize = (size: number): string => {
     return `${(size / (1024 * 1024)).toFixed(2)}MB`;
@@ -43,39 +45,59 @@ export default function Home() {
     });
 
   const uploadFile = async (file: File) => {
-    const base64 = await fileToBase64(file);
+    try {
+      // Simulate random wait time between 1 and 10 seconds
+      const delay = Math.random() * (10000 - 1000) + 1000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        file: base64,
-        fileName: file.name,
-        size: file.size,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error("File upload failed");
+      const base64 = await fileToBase64(file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file: base64,
+          fileName: file.name,
+          size: file.size,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("File upload failed");
+      }
+
+      toast.success(`Uploaded ${file.name} successfully!`);
+    } catch (error) {
+      toast.error(`Failed to upload ${file.name}`);
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { [file.size]: _, ...rest } = uploadingFiles;
+    setUploadingFiles(rest);
+
+    void filesQuery.refetch();
+    void queryClient.invalidateQueries(["files.getAllFiles"]);
   };
 
-  useEffect(() => {
-    const upload = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const promises: any[] = [];
-      uploadingFiles.forEach((file) => {
-        promises.push(uploadFile(file));
-      });
+  const acceptedFilesHandler = async (files: Record<string, File>) => {
+    if (!Object.keys(files).length) return;
 
-      await Promise.all(promises);
-      void queryClient.invalidateQueries(["files"]);
+    setUploadingFiles(files);
+    toast.info(`Start processing ${Object.keys(files).length} files...`);
 
-      setUploadingFiles([]);
-    };
-    if (uploadingFiles.length) {
-      void upload();
-    }
-  }, [uploadingFiles]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const promises: any[] = [];
+    Object.values(files).forEach((file) => {
+      promises.push(uploadFile(file));
+    });
+
+    await Promise.all(promises).finally(() => {
+      void filesQuery.refetch();
+      void queryClient.invalidateQueries(["files.getAllFiles"]);
+
+      setUploadingFiles({});
+      toast.info("Finish processing files!");
+    });
+  };
 
   return (
     <>
@@ -87,24 +109,20 @@ export default function Home() {
 
       <main className="flex min-h-screen flex-col items-center bg-gradient-to-b from-slate-300 to-slate-400">
         <div className="container flex max-w-6xl flex-col items-center justify-center gap-12 px-4 py-16 ">
-          <Dropzone
-            onAcceptedFiles={(files) => {
-              setUploadingFiles((prev) => [...prev, ...files]);
-            }}
-          />
+          <Dropzone onAcceptedFiles={acceptedFilesHandler} />
 
-          {uploadingFiles.map((f) => (
-            <React.Fragment key={f.size}>
+          {Object.keys(uploadingFiles).length > 0 ? (
+            <React.Fragment>
               <Separator orientation="horizontal" />
               <Alert className="bg-slate-300">
-                <Terminal className="h-4 w-4" />
+                <Info className="h-4 w-4" />
                 <AlertTitle>Heads up!</AlertTitle>
                 <AlertDescription>
-                  You are uploading {f.name} ({getSize(f.size)})
+                  You are uploading {Object.keys(uploadingFiles).length} files.
                 </AlertDescription>
               </Alert>
             </React.Fragment>
-          ))}
+          ) : null}
 
           <Table>
             <TableCaption className="pb-4">
@@ -118,7 +136,7 @@ export default function Home() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {files.data?.map((file) => (
+              {filesQuery.data?.map((file) => (
                 <TableRow key={file.id}>
                   <TableCell>{getSize(file.size)}</TableCell>
                   <TableCell className="text-right">
@@ -132,7 +150,7 @@ export default function Home() {
               <TableRow>
                 <TableCell>count</TableCell>
                 <TableCell className="text-right">
-                  {files.data?.length}
+                  {filesQuery.data?.length}
                 </TableCell>
               </TableRow>
             </TableFooter>
