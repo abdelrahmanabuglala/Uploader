@@ -45,7 +45,7 @@ export default function Home() {
   const uploadFile = async (file: File) => {
     try {
       // Simulate random wait time between 1 and 6 seconds
-      const delay = Math.random() * (5000 - 1000) + 1000;
+      const delay = Math.floor(Math.random() * 5000) + 1000;
       await new Promise((resolve) => setTimeout(resolve, delay));
 
       const base64 = await fileToBase64(file);
