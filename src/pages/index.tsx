@@ -87,6 +87,23 @@ export default function Home() {
     setUploadingFiles(files);
     toast.info(`Start processing ${Object.keys(files).length} files...`);
 
+    // Sequential processing start
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+    // for (let i = 0; i < Object.keys(files).length; i++) {
+    //   const key = Object.keys(files)[i];
+    //   if (!key) return;
+    //   const file = files[key];
+    //   if (!file) return;
+    //   await uploadFile(file);
+    // }
+
+    // toast.info("Finish processing files!");
+
+    // void filesQuery.refetch();
+    // Sequential processing end
+
+    // Parralel processing start
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const promises: any[] = [];
     Object.values(files).forEach((file) => {
@@ -98,6 +115,8 @@ export default function Home() {
 
       void filesQuery.refetch();
     });
+
+    // Parralel processing end
   };
 
   return (
