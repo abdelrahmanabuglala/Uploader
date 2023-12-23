@@ -41,6 +41,14 @@ export default async function handler(
         buffer,
       );
 
+      const exist = await db.uFile.findFirst({
+        where: { url: `/uploads/${fileName}` },
+      });
+
+      if (exist) {
+        throw new Error("File exist before");
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await db.uFile.create({
         data: {

@@ -87,6 +87,7 @@ export default function Home() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { [file.size + file.name]: _, ...rest } = uploadingFiles;
     setUploadingFiles(rest);
+    setFileNum((prev) => prev - 1);
   };
 
   const acceptedFilesHandler = async (files: Record<string, File>) => {
