@@ -9,4 +9,8 @@ export const filesRouter = createTRPCRouter({
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return files;
   }),
+
+  resetAll: publicProcedure.mutation(async ({ ctx }) => {
+    await ctx.db.uFile.deleteMany();
+  }),
 });

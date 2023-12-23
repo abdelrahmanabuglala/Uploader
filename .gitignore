@@ -41,4 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-/uploads
+
+public/uploads/*
+!.keep

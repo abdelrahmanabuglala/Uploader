@@ -45,7 +45,7 @@ export const Dropzone = ({ onAcceptedFiles }: DropzoneProps) => {
     acceptedFiles,
   } =
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    useDropzone();
+    useDropzone({ accept: { "image/*": [] } });
 
   const style = useMemo(
     () => ({

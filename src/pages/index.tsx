@@ -4,10 +4,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Info } from "lucide-react";
 import Head from "next/head";
+import Image from "next/image";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "~/@/components/ui/alert";
+import { Button } from "~/@/components/ui/button";
+import { Label } from "~/@/components/ui/label";
 import { Separator } from "~/@/components/ui/separator";
+import { Switch } from "~/@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -23,7 +27,11 @@ import { api } from "~/utils/api";
 
 export default function Home() {
   const filesQuery = api.files.getAllFiles.useQuery();
+  const resetAllMutation = api.files.resetAll.useMutation();
 
+  const [isParallel, setIsParallel] = useState<boolean>(true);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [fileNum, setFileNum] = useState<number>(0);
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, File>>(
     {},
   );
@@ -84,45 +92,52 @@ export default function Home() {
   const acceptedFilesHandler = async (files: Record<string, File>) => {
     if (!Object.keys(files).length) return;
 
+    setIsUploading(true);
+    setFileNum(Object.keys(files).length);
     setUploadingFiles(files);
     toast.info(`Start processing ${Object.keys(files).length} files...`);
 
-    // Sequential processing start
-    // eslint-disable-next-line @typescript-eslint/prefer-for-of
-    // for (let i = 0; i < Object.keys(files).length; i++) {
-    //   const key = Object.keys(files)[i];
-    //   if (!key) return;
-    //   const file = files[key];
-    //   if (!file) return;
-    //   await uploadFile(file);
-    // }
+    if (isParallel) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const promises: any[] = [];
+      Object.values(files).forEach((file) => {
+        promises.push(uploadFile(file));
+      });
 
-    // toast.info("Finish processing files!");
+      await Promise.all(promises).finally(() => {
+        toast.info("Finish processing files!");
 
-    // void filesQuery.refetch();
-    // Sequential processing end
+        void filesQuery.refetch();
+      });
+    } else {
+      // eslint-disable-next-line @typescript-eslint/prefer-for-of
+      for (let i = 0; i < Object.keys(files).length; i++) {
+        const key = Object.keys(files)[i];
+        if (!key) return;
+        const file = files[key];
+        if (!file) return;
+        await uploadFile(file);
+      }
 
-    // Parralel processing start
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const promises: any[] = [];
-    Object.values(files).forEach((file) => {
-      promises.push(uploadFile(file));
-    });
-
-    await Promise.all(promises).finally(() => {
       toast.info("Finish processing files!");
 
       void filesQuery.refetch();
-    });
+    }
 
-    // Parralel processing end
+    setFileNum(0);
+    setIsUploading(false);
+  };
+
+  const resetAllHandler = async () => {
+    await resetAllMutation.mutateAsync();
+
+    void filesQuery.refetch();
   };
 
   return (
     <>
       <Head>
-        <title>Upload me</title>
+        <title>Upload it</title>
         <meta name="description" content="Upload any files" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -131,18 +146,39 @@ export default function Home() {
         <div className="container flex max-w-6xl flex-col items-center justify-center gap-12 px-4 py-16 ">
           <Dropzone onAcceptedFiles={acceptedFilesHandler} />
 
-          {Object.keys(uploadingFiles).length > 0 ? (
+          {isUploading ? (
             <React.Fragment>
               <Separator orientation="horizontal" />
               <Alert className="bg-slate-300">
                 <Info className="h-4 w-4" />
                 <AlertTitle>Heads up!</AlertTitle>
                 <AlertDescription>
-                  You are uploading {Object.keys(uploadingFiles).length} files.
+                  You are uploading {fileNum} files.
                 </AlertDescription>
               </Alert>
             </React.Fragment>
           ) : null}
+
+          <div className="flex w-full justify-between">
+            <div className="space-x-2">
+              <Label htmlFor="seq-mode">Sequential Mode</Label>
+              <Switch
+                id="seq-mode"
+                checked={isParallel}
+                onCheckedChange={setIsParallel}
+              />
+              <Label htmlFor="seq-mode">Parallel Mode</Label>
+            </div>
+
+            <Button
+              variant={"destructive"}
+              disabled={resetAllMutation.isLoading || !filesQuery.data?.length}
+              className="disabled:opacity-50"
+              onClick={resetAllHandler}
+            >
+              Reset All
+            </Button>
+          </div>
 
           <Table>
             <TableCaption className="pb-4">
@@ -153,6 +189,7 @@ export default function Home() {
                 <TableHead className="w-24">Size</TableHead>
                 <TableHead className="w-40 text-right">Date</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead className="w-40">Preview</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -163,6 +200,14 @@ export default function Home() {
                     {file.createdAt.toLocaleDateString()}
                   </TableCell>
                   <TableCell className="font-medium">{file.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <Image
+                      src={file.url}
+                      alt={`preview for ${file.name}`}
+                      width={80}
+                      height={80}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -36,7 +36,10 @@ export default async function handler(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const buffer = Buffer.from(file, "base64");
 
-      fs.writeFileSync(path.join(process.cwd(), "uploads", fileName), buffer);
+      fs.writeFileSync(
+        path.join(process.cwd(), "public", "uploads", fileName),
+        buffer,
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await db.uFile.create({
